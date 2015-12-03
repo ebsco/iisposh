@@ -1,0 +1,16 @@
+failure_tags:
+  #- EIS001 -- Cannot follow due to being open sourced
+  - EIS002
+  - EIS003
+  - EIS004
+  - EIS005
+  - EIS006
+  - EIS008
+  - EIS012
+  - EIS013
+  - EIS014
+  - EIS016
+warning_tags:
+  - EIS007
+  - EIS009
+  - EIS010
