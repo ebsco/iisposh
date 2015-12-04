@@ -57,7 +57,7 @@ function New-Iisweb
     #MSBUG - when no websites exist
     $id = (dir iis:\sites | foreach {$_.id} | sort -Descending | select -first 1) + 1
     
-    $newweb = New-Website -Name $name -id $id -ErrorAction stop					
+    $newweb = New-Website -Name $name -id $id -Force -ErrorAction stop					
     Write-Host " - Success" -ForegroundColor Green 
     Write-Host " "
     
