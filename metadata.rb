@@ -5,6 +5,7 @@ license          'All rights reserved'
 description      'Installs/Configures IIS Features'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 
-version          '2.2.4'
+version          '2.2.5'
 
 depends		'windows_feature', '~>1.0'
+source_url 'https://github.com/ebsco/iisposh' if respond_to?(:source_url)
