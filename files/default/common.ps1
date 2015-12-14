@@ -55,7 +55,9 @@ function Config-Property
   foreach ($object in $webobj.keys)								
   {
     $property = $object
-    $value = $webobj.Item($object)
+	$value = $webobj.Item($object)
+	#Check the case sensitivity  - Windows 2012R2 properties are case sensitive
+	$property = Check-NotePropertyCase -property $object -path $path
     if (Iisposh-Needs-ChangedValues)
     {
       $value = Get-Changedvalue -name $object -value $value
@@ -556,3 +558,58 @@ function WaitForWebsiteExpectedState
       throw "Was not able to verify that website $website was is correct state $expectedState"
     }
 }
+
+function Check-NotePropertyCase
+{
+  [CmdletBinding(SupportsShouldProcess=$true)] 														
+  param
+  (	
+  [Parameter(Mandatory=$true)]
+  [string] $property,
+  [string] $path
+  )
+    
+    $array = $property.split(".")
+    $length = $array.length
+    $ErrorActionPreference="Stop"
+	$noteprops = Get-Itemproperty -Path $path | Get-Member -MemberType NoteProperty | select Name | Where-Object {!($_.Name  -like "PS*")}
+    for($i=0; $i -le $length - 1; $i++)
+    {
+        if ($i -eq 0)
+        {
+            $prefix = $array[$i]
+        }
+        else
+        {
+           $prop = $prefix + "." + $array[$i] 
+           $prefix = $prop
+        }
+        try
+        {
+            $noteprops += Get-Itemproperty -Path $path -name $prefix | Get-Member -MemberType NoteProperty | select Name | Where-Object {!($_.Name  -like "PS*")}
+        }
+        catch
+        {
+            write-error -Exception ($_.Exception) -erroraction Continue;
+            write-host "Error: $property doesn't exist please check your spelling"
+            exit(1)
+        }
+    }
+   
+         foreach ($object in $array)
+         {
+             foreach ($item in $noteprops)
+             {
+                $name = $item.name
+                if ($object -eq $name)
+                {
+                    $array = $array -replace $object,$name
+				}
+			}
+     
+		}
+      $array = $array -join "."
+      return $array
+  }
+
+ 
