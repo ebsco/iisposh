@@ -626,7 +626,6 @@ function Convert-PropertyCase
     
     }
     throw "Property Doesn't exist in IIS. Please check the spelling of the property!"
-    exit(1)
 }
 
  
