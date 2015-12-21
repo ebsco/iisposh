@@ -57,7 +57,7 @@ function Config-Property
     $property = $object
 	$value = $webobj.Item($object)
 	#Check the case sensitivity  - Windows 2012R2 properties are case sensitive
-	$property = Check-NotePropertyCase -property $object -path $path
+	$property = Convert-PropertyCase -property $object -path $path
     if (Iisposh-Needs-ChangedValues)
     {
       $value = Get-Changedvalue -name $object -value $value
@@ -559,57 +559,74 @@ function WaitForWebsiteExpectedState
     }
 }
 
-function Check-NotePropertyCase
+Function Get-AllNoteProperties
+{
+  [CmdletBinding(SupportsShouldProcess=$true)] 														
+  param
+  (	
+  [Parameter(Mandatory=$false)]
+  [string] $prefix,
+  [Parameter(Mandatory=$true)]
+  [string] $propobjpath
+  )
+    
+  if([string]::IsNullOrEmpty($prefix))
+  {
+    $notepropertynames= Get-ItemProperty $propobjpath | Get-Member -MemberType NoteProperty | select Name | Where-Object {!($_.Name  -like "PS*")}
+  }
+  else
+  {
+    $notepropertynames= Get-ItemProperty -Path $propobjpath -Name $prefix | Get-Member -MemberType NoteProperty | select Name | Where-Object {!($_.Name  -like "PS*")}
+  }
+
+    foreach($props in $notepropertynames)
+    {
+        if([string]::IsNullOrEmpty($prefix))
+        {
+          $myfqdn=$props.Name
+        }
+        else{
+          $myfqdn=$prefix+"."+$props.Name
+        }
+
+   
+       $propnames=@(Get-ItemProperty -Path $propobjpath -Name $myfqdn -ErrorAction SilentlyContinue | Get-Member -MemberType NoteProperty -ErrorAction SilentlyContinue | select Name | Where-Object {!($_.Name  -like "PS*")})
+              
+         if($propnames.Count -eq 0)
+         {
+            $myfqdn
+         }
+         else
+         {
+            Get-AllNoteProperties $myfqdn $propobjpath
+         }
+     }  
+}
+
+
+
+function Convert-PropertyCase
 {
   [CmdletBinding(SupportsShouldProcess=$true)] 														
   param
   (	
   [Parameter(Mandatory=$true)]
   [string] $property,
+  [Parameter(Mandatory=$true)]
   [string] $path
   )
-    
-    $array = $property.split(".")
-    $length = $array.length
-    $ErrorActionPreference="Stop"
-	$noteprops = Get-Itemproperty -Path $path | Get-Member -MemberType NoteProperty | select Name | Where-Object {!($_.Name  -like "PS*")}
-    for($i=0; $i -le $length - 1; $i++)
+
+    $nprops = Get-AllNoteProperties -propobjpath $path
+    foreach ($prop in $nprops)
     {
-        if ($i -eq 0)
+        if ($prop -eq $property)
         {
-            $prefix = $array[$i]
+            return $prop
         }
-        else
-        {
-           $prop = $prefix + "." + $array[$i] 
-           $prefix = $prop
-        }
-        try
-        {
-            $noteprops += Get-Itemproperty -Path $path -name $prefix | Get-Member -MemberType NoteProperty | select Name | Where-Object {!($_.Name  -like "PS*")}
-        }
-        catch
-        {
-            write-error -Exception ($_.Exception) -erroraction Continue;
-            write-host "Error: $property doesn't exist please check your spelling"
-            exit(1)
-        }
+    
     }
-   
-         foreach ($object in $array)
-         {
-             foreach ($item in $noteprops)
-             {
-                $name = $item.name
-                if ($object -eq $name)
-                {
-                    $array = $array -replace $object,$name
-				}
-			}
-     
-		}
-      $array = $array -join "."
-      return $array
-  }
+    throw "Property Doesn't exist in IIS. Please check the spelling of the property!"
+    exit(1)
+}
 
  
