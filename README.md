@@ -10,7 +10,7 @@ Platforms
 ---------
 
 * Windows Server 2008 (R1, R2)
-* Windows Server 2012 (R1, R2) (Untested)
+* Windows Server 2012 (R1, R2) (Testing In Progress)
 
 
 Resource/Provider
