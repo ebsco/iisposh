@@ -55,7 +55,9 @@ function Config-Property
   foreach ($object in $webobj.keys)								
   {
     $property = $object
-    $value = $webobj.Item($object)
+	$value = $webobj.Item($object)
+	#Check the case sensitivity  - Windows 2012R2 properties are case sensitive
+	$property = Convert-PropertyCase -property $object -path $path
     if (Iisposh-Needs-ChangedValues)
     {
       $value = Get-Changedvalue -name $object -value $value
@@ -556,3 +558,74 @@ function WaitForWebsiteExpectedState
       throw "Was not able to verify that website $website was is correct state $expectedState"
     }
 }
+
+Function Get-AllNoteProperties
+{
+  [CmdletBinding(SupportsShouldProcess=$true)] 														
+  param
+  (	
+  [Parameter(Mandatory=$false)]
+  [string] $prefix,
+  [Parameter(Mandatory=$true)]
+  [string] $propobjpath
+  )
+    
+  if([string]::IsNullOrEmpty($prefix))
+  {
+    $notepropertynames= Get-ItemProperty $propobjpath | Get-Member -MemberType NoteProperty | select Name | Where-Object {!($_.Name  -like "PS*")}
+  }
+  else
+  {
+    $notepropertynames= Get-ItemProperty -Path $propobjpath -Name $prefix | Get-Member -MemberType NoteProperty | select Name | Where-Object {!($_.Name  -like "PS*")}
+  }
+
+    foreach($props in $notepropertynames)
+    {
+        if([string]::IsNullOrEmpty($prefix))
+        {
+          $myfqdn=$props.Name
+        }
+        else{
+          $myfqdn=$prefix+"."+$props.Name
+        }
+
+   
+       $propnames=@(Get-ItemProperty -Path $propobjpath -Name $myfqdn -ErrorAction SilentlyContinue | Get-Member -MemberType NoteProperty -ErrorAction SilentlyContinue | select Name | Where-Object {!($_.Name  -like "PS*")})
+              
+         if($propnames.Count -eq 0)
+         {
+            $myfqdn
+         }
+         else
+         {
+            Get-AllNoteProperties $myfqdn $propobjpath
+         }
+     }  
+}
+
+
+
+function Convert-PropertyCase
+{
+  [CmdletBinding(SupportsShouldProcess=$true)] 														
+  param
+  (	
+  [Parameter(Mandatory=$true)]
+  [string] $property,
+  [Parameter(Mandatory=$true)]
+  [string] $path
+  )
+
+    $nprops = Get-AllNoteProperties -propobjpath $path
+    foreach ($prop in $nprops)
+    {
+        if ($prop -eq $property)
+        {
+            return $prop
+        }
+    
+    }
+    throw "Property Doesn't exist in IIS. Please check the spelling of the property!"
+}
+
+ 

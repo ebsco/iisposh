@@ -52,7 +52,7 @@ function Print-ChildElementAttributes ($prefix, $propobjpath){
     $notepropertynames= gi $propobjpath | gm -MemberType NoteProperty | select Name | Where-Object {!($_.Name  -like "PS*")}
   }
   else{
-    $notepropertynames= (gi $propobjpath).($prefix) | gm -MemberType NoteProperty | select Name | Where-Object {!($_.Name  -like "PS*")}
+    $notepropertynames= Get-ItemProperty -path $propobjpath -Name $prefix | gm -MemberType NoteProperty | select Name | Where-Object {!($_.Name  -like "PS*")}
   }
   
   foreach($props in $notepropertynames){
@@ -64,7 +64,7 @@ function Print-ChildElementAttributes ($prefix, $propobjpath){
     }
     
     
-     $propnames=@((gi $propobjpath).($myfqdn)| gm -MemberType NoteProperty -EA SilentlyContinue | select Name | Where-Object {!($_.Name  -like "PS*")}) 
+     $propnames=@(Get-ItemProperty -path $propobjpath -Name $myfqdn -EA SilentlyContinue| gm -MemberType NoteProperty -EA SilentlyContinue | select Name | Where-Object {!($_.Name  -like "PS*")}) 
      #write-host "PropNames:$($propnames.Count)"
      
      if($propnames.Count -eq 0){
