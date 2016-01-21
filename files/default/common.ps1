@@ -17,8 +17,12 @@ function Get-NormalizedPath{
   (	
   [AllowEmptyString()]
   [Parameter(Mandatory=$true)]
-  [string] $path
+  $path
   )
+  if( $path -isnot [string])
+  {
+    return $path
+  }
   #Test-path breaks with an empty or null string
   if([String]::IsNullOrEmpty($path)){
     return $path
@@ -75,7 +79,7 @@ function Config-Property
     {
       try
       {
-        Set-ItemProperty $path -Name $property -Value "$value" -ErrorAction Stop 	 
+        Set-ItemProperty $path -Name $property -Value $value -ErrorAction Stop 	 
         Write-Host " - Success" -ForegroundColor Green 
         Write-Host " "
         $exitcode = $true
