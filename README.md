@@ -258,6 +258,10 @@ Helpers
  * files\default\test.ps1
    * To aid in testing of powershell outside of chef and LWRPs, test.ps1 was created to help test the different function calls.
 
+Testing
+=======
+There are custom [ChefSpec](https://github.com/sethvargo/chefspec) matchers for all resources.
+
 Author
 ------
 
